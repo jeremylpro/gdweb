@@ -28,7 +28,7 @@ class GameState {
         this.isDead = false;
     }
 }
-const ATLAS_KEYS = ["GJ_WebSheet"];
+const ATLAS_KEYS = ["GJ_WebSheet", "GJ_GameSheet-hd"];
 
 // find which atlas a frame is in, if any
 function findAtlasFrame(scene, frame) {

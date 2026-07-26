@@ -35,6 +35,7 @@ class BootScene extends Phaser.Scene {
         this.load.on("loaderror", fileObject => {}),
         // atlas
         this.load.atlas("GJ_WebSheet", 'assets/GJ_WebSheet.png', 'assets/GJ_WebSheet.json'),
+        this.load.atlas("GJ_GameSheet-hd", 'assets/GJ_GameSheet-hd.png', 'assets/GJ_GameSheet-hd.json'),
         // fonts
         this.load.image('bigFont', 'assets/bigFont.png'),
         this.load.text("bigFontFnt", "assets/bigFont.fnt"),
