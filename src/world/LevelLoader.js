@@ -272,20 +272,23 @@ const OBJECT_DEFINITIONS = {
         35: {
             type: OBJECT_TYPE2_PAD,
             frame: "bump_01_001.png",
-            gridW: 1,
-            gridH: 1
+            gridW: 26/31,
+            gridH: 5/31,
+            sub: "yellow"
         },
         67: {
             type: OBJECT_TYPE2_PAD,
             frame: "bump_02_001.png",
-            gridW: 1,
-            gridH: 1
+            gridW: 26/31,
+            gridH: 5/31,
+            sub: "blue"
         },
         140: {
             type: OBJECT_TYPE2_PAD,
             frame: "bump_03_001.png",
-            gridW: 1,
-            gridH: 1
+            gridW: 26/31,
+            gridH: 5/31,
+            sub: "pink"
         },
         36: {
             type: OBJECT_TYPE2_RING,

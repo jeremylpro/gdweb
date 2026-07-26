@@ -47,7 +47,7 @@ class BootScene extends Phaser.Scene {
         this.load.image('square04_001', "assets/square04_001.png"),
         this.load.image("GJ_square02", "assets/GJ_square02.png"),
         // level
-        this.load.text("level_1", "assets/1.txt"),
+        this.load.text("level_1", "assets/2.txt"),
         // audio
         this.load.audio('stereo_madness', "assets/StereoMadness.mp3"),
         this.load.audio('explode_11', "assets/explode_11.ogg"),

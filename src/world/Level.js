@@ -3,7 +3,7 @@
 */
 import * as Phaser from 'phaser';
 import { SCREEN_WIDTH, TILE_SIZE, SHIP_CAMERA_Y_OFFSET, PLAYER_GAME_CAMERA_X, FLY_CEILING, TILE_SIZE2, COLOR_GREEN, OBJECT_TYPE_SOLID, OBJECT_TYPE_HAZARD, OBJECT_TYPE_PORTAL_SHIP, OBJECT_TYPE_PORTAL_CUBE, worldYToScreenY, BLEND_ADD, BLEND_NORMAL,
-    OBJECT_TYPE2_SOLID, OBJECT_TYPE2_HAZARD, OBJECT_TYPE2_DECORATIVE, OBJECT_TYPE2_PORTAL, OBJECT_TYPE2_PAD, OBJECT_TYPE2_RING, OBJECT_TYPE2_TRIGGER, OBJECT_TYPE2_SPEED, OBJECT_TYPE2_FLY, OBJECT_TYPE2_CUBE
+    OBJECT_TYPE2_SOLID, OBJECT_TYPE2_HAZARD, OBJECT_TYPE2_DECORATIVE, OBJECT_TYPE2_PORTAL, OBJECT_TYPE2_PAD, OBJECT_TYPE_PAD_YELLOW, OBJECT_TYPE_PAD_BLUE, OBJECT_TYPE_PAD_PINK, OBJECT_TYPE2_RING, OBJECT_TYPE2_TRIGGER, OBJECT_TYPE2_SPEED, OBJECT_TYPE2_FLY, OBJECT_TYPE2_CUBE
  } from '../constants.js';
 import { findAtlasFrame, createImageFromAtlas, GameObject } from '../systems/GameState.js';
 import { parseLevel, getObjectDefinition } from './LevelLoader.js';
@@ -644,6 +644,21 @@ class LevelClass {
                                 hitbox.portalY = worldY,
 
                                 this.objects.push(hitbox),
+                                this._addCollisionToSection(hitbox);
+                            }
+                        } else if (definition.type === OBJECT_TYPE2_PAD) {
+                            let padType = null;  
+                            if      (definition.sub === "yellow") padType = OBJECT_TYPE_PAD_YELLOW;  
+                            else if (definition.sub === "blue")   padType = OBJECT_TYPE_PAD_BLUE;  
+                            else if (definition.sub === "pink")   padType = OBJECT_TYPE_PAD_PINK;  
+                        
+                            if (padType) {  
+                                let hitboxHeight = definition.gridH * TILE_SIZE,
+                                    hitboxWidth  = definition.gridW * TILE_SIZE,
+                                // shift center down: bottom of cell is worldY - TILE_SIZE/2,  
+                                // then move up by half the pad height to get the center 
+                                hitbox       = new GameObject(padType, worldX, worldY, hitboxWidth, hitboxHeight);
+                                this.objects.push(hitbox);
                                 this._addCollisionToSection(hitbox);
                             }
                         }

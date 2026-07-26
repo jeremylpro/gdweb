@@ -3,7 +3,7 @@
 */
 // is 30 half the player size?
 // UPDATE: 30 is tile size in units, i believe
-import { PLAYER_GAME_CAMERA_X, TIME_SCALE, JUMP_VELOCITY, TILE_SIZE2, COLOR_GREEN, COLOR_BLUE, OBJECT_TYPE_SOLID, OBJECT_TYPE_HAZARD, OBJECT_TYPE_PORTAL_SHIP, OBJECT_TYPE_PORTAL_CUBE, worldYToScreenY, BLEND_ADD } from '../constants.js';
+import { PLAYER_GAME_CAMERA_X, TIME_SCALE, JUMP_VELOCITY, TILE_SIZE2, COLOR_GREEN, COLOR_BLUE, OBJECT_TYPE_SOLID, OBJECT_TYPE_HAZARD, OBJECT_TYPE_PORTAL_SHIP, OBJECT_TYPE_PORTAL_CUBE, OBJECT_TYPE_PAD_YELLOW, OBJECT_TYPE_PAD_BLUE, OBJECT_TYPE_PAD_PINK, worldYToScreenY, BLEND_ADD } from '../constants.js';
 import { findAtlasFrame } from '../systems/GameState.js';
 import { StreakClass, createSpriteLayer } from './PlayerRenderer.js';
 
@@ -509,6 +509,31 @@ class PlayerClass {
                 burstY = worldYToScreenY(this.p.y) + 30;
             
             emitter.explode(10, burstX, burstY);
+        }
+    }
+    hitPad(padType) {  
+        if (padType === OBJECT_TYPE_PAD_YELLOW) {  
+            let velocity = 30; // strong upward boost 29.198743
+            this.p.yVelocity = velocity * this.flipMod(),  
+            this.p.isJumping  = true,  
+            this.p.onGround   = false,  
+            this.p.canJump    = false,  
+            this.runRotateAction();  
+        } else if (padType === OBJECT_TYPE_PAD_BLUE) {  
+            this.p.gravityFlipped = !this.p.gravityFlipped;  
+            let velocity = 0;
+            this.p.yVelocity = velocity * this.flipMod(),  
+            this.p.isJumping  = true,  
+            this.p.onGround   = false,  
+            this.p.canJump    = false,
+            this.runRotateAction();  
+        } else if (padType === OBJECT_TYPE_PAD_PINK) {  
+            let velocity = 19.067214; // weaker upward boost  
+            this.p.yVelocity = velocity * this.flipMod(),  
+            this.p.isJumping  = true,  
+            this.p.onGround   = false,  
+            this.p.canJump    = false,  
+            this.runRotateAction();  
         }
     }
     // kill the player and create explosion particles
@@ -1131,6 +1156,22 @@ class PlayerClass {
                         this._playPortalShine(object),
                         this.enterShipMode(object)
                     );
+                if (object.type === OBJECT_TYPE_PAD_YELLOW ||  
+                    object.type === OBJECT_TYPE_PAD_PINK   ||  
+                    object.type === OBJECT_TYPE_PAD_BLUE) {  
+                
+                    // only trigger when landing on top of the pad  
+                    let topEdge     = playerY - halfSize + innerMargin,  
+                        lastTopEdge = lastPlayerY - halfSize + innerMargin;  
+                
+                    if ((topEdge >= objectTop || lastTopEdge >= objectTop) &&  
+                        (this.p.yVelocity <= 0 || this.p.onGround)) {  
+                        this.p.y = objectTop + halfSize,  
+                        this.hitPad(object.type),  
+                        landedOnObject = true;  
+                        continue;  
+                    }
+                }
             }
         }
         
