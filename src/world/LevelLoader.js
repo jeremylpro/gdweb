@@ -278,7 +278,7 @@ const OBJECT_DEFINITIONS = {
         },
         67: {
             type: OBJECT_TYPE2_PAD,
-            frame: "bump_02_001.png",
+            frame: "gravbump_01_001.png",
             gridW: 26/31,
             gridH: 5/31,
             sub: "blue"

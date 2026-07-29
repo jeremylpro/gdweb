@@ -3,7 +3,7 @@
 */
 // is 30 half the player size?
 // UPDATE: 30 is tile size in units, i believe
-import { PLAYER_GAME_CAMERA_X, TIME_SCALE, JUMP_VELOCITY, TILE_SIZE2, COLOR_GREEN, COLOR_BLUE, OBJECT_TYPE_SOLID, OBJECT_TYPE_HAZARD, OBJECT_TYPE_PORTAL_SHIP, OBJECT_TYPE_PORTAL_CUBE, OBJECT_TYPE_PAD_YELLOW, OBJECT_TYPE_PAD_BLUE, OBJECT_TYPE_PAD_PINK, worldYToScreenY, BLEND_ADD } from '../constants.js';
+import { PLAYER_GAME_CAMERA_X, TIME_SCALE, JUMP_VELOCITY, TILE_SIZE2, COLOR_GREEN, COLOR_BLUE, OBJECT_TYPE_SOLID, OBJECT_TYPE_HAZARD, OBJECT_TYPE_PORTAL_SHIP, OBJECT_TYPE_PORTAL_CUBE, OBJECT_TYPE_PAD_YELLOW, OBJECT_TYPE_PAD_BLUE, OBJECT_TYPE_PAD_PINK, PAD_YELLOW_VELOCITY, PAD_PINK_VELOCITY, PAD_BLUE_VELOCITY, worldYToScreenY, BLEND_ADD } from '../constants.js';
 import { findAtlasFrame } from '../systems/GameState.js';
 import { StreakClass, createSpriteLayer } from './PlayerRenderer.js';
 
@@ -511,29 +511,26 @@ class PlayerClass {
             emitter.explode(10, burstX, burstY);
         }
     }
-    hitPad(padType) {  
-        if (padType === OBJECT_TYPE_PAD_YELLOW) {  
-            let velocity = 30; // strong upward boost 29.198743
-            this.p.yVelocity = velocity * this.flipMod(),  
-            this.p.isJumping  = true,  
-            this.p.onGround   = false,  
-            this.p.canJump    = false,  
-            this.runRotateAction();  
-        } else if (padType === OBJECT_TYPE_PAD_BLUE) {  
-            this.p.gravityFlipped = !this.p.gravityFlipped;  
-            let velocity = 0;
-            this.p.yVelocity = velocity * this.flipMod(),  
-            this.p.isJumping  = true,  
-            this.p.onGround   = false,  
+    hitPad(padType) {
+        if (padType === OBJECT_TYPE_PAD_YELLOW) {
+            this.p.yVelocity = PAD_YELLOW_VELOCITY * this.flipMod(),
+            this.p.isJumping  = true,
+            this.p.onGround   = false,
             this.p.canJump    = false,
-            this.runRotateAction();  
-        } else if (padType === OBJECT_TYPE_PAD_PINK) {  
-            let velocity = 19.067214; // weaker upward boost  
-            this.p.yVelocity = velocity * this.flipMod(),  
-            this.p.isJumping  = true,  
-            this.p.onGround   = false,  
-            this.p.canJump    = false,  
-            this.runRotateAction();  
+            this.runRotateAction();
+        } else if (padType === OBJECT_TYPE_PAD_BLUE) {
+            this.p.gravityFlipped = !this.p.gravityFlipped;
+            this.p.yVelocity = PAD_BLUE_VELOCITY * this.flipMod(),
+            this.p.isJumping  = true,
+            this.p.onGround   = false,
+            this.p.canJump    = false,
+            this.runRotateAction();
+        } else if (padType === OBJECT_TYPE_PAD_PINK) {
+            this.p.yVelocity = PAD_PINK_VELOCITY * this.flipMod(),
+            this.p.isJumping  = true,
+            this.p.onGround   = false,
+            this.p.canJump    = false,
+            this.runRotateAction();
         }
     }
     // kill the player and create explosion particles
