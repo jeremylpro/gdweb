@@ -3,7 +3,7 @@
 */
 // is 30 half the player size?
 // UPDATE: 30 is tile size in units, i believe
-import { PLAYER_GAME_CAMERA_X, TIME_SCALE, JUMP_VELOCITY, TILE_SIZE2, COLOR_GREEN, COLOR_BLUE, OBJECT_TYPE_SOLID, OBJECT_TYPE_HAZARD, OBJECT_TYPE_PORTAL_SHIP, OBJECT_TYPE_PORTAL_CUBE, OBJECT_TYPE_PAD_YELLOW, OBJECT_TYPE_PAD_BLUE, OBJECT_TYPE_PAD_PINK, PAD_YELLOW_VELOCITY, PAD_PINK_VELOCITY, PAD_BLUE_VELOCITY, worldYToScreenY, BLEND_ADD } from '../constants.js';
+import { PLAYER_GAME_CAMERA_X, TIME_SCALE, JUMP_VELOCITY, TILE_SIZE2, COLOR_GREEN, COLOR_BLUE, OBJECT_TYPE_SOLID, OBJECT_TYPE_HAZARD, OBJECT_TYPE_PORTAL_SHIP, OBJECT_TYPE_PORTAL_CUBE, OBJECT_TYPE_PORTAL_BALL, OBJECT_TYPE_PAD_YELLOW, OBJECT_TYPE_PAD_BLUE, OBJECT_TYPE_PAD_PINK, PAD_YELLOW_VELOCITY, PAD_PINK_VELOCITY, PAD_BLUE_VELOCITY, worldYToScreenY, BLEND_ADD } from '../constants.js';
 import { findAtlasFrame } from '../systems/GameState.js';
 import { StreakClass, createSpriteLayer } from './PlayerRenderer.js';
 
@@ -88,6 +88,22 @@ class PlayerClass {
         
         this._shipOverlayLayer && this._shipOverlayLayer.sprite.setTint(COLOR_BLUE),
         
+        // ball sprites
+        this._ballGlowLayer = createSpriteLayer(scene, playerX, screenY, "player_ball_01_glow_001.png", 9, false),
+        this._ballSpriteLayer = createSpriteLayer(scene, playerX, screenY, "player_ball_01_001.png", 10, false),
+        this._ballOverlayLayer = createSpriteLayer(scene, playerX, screenY, "player_ball_01_2_001.png", 8, false),
+        this._ballExtraLayer = createSpriteLayer(scene, playerX, screenY, "player_ball_01_extra_001.png", 12, false),
+        
+        this._ballGlowLayer && (
+            this._ballGlowLayer.sprite.setTint(COLOR_BLUE),
+            this._ballGlowLayer.sprite._glowEnabled = false
+        ),
+        
+        this._ballSpriteLayer && this._ballSpriteLayer.sprite.setTint(COLOR_GREEN),
+        this._ballOverlayLayer && this._ballOverlayLayer.sprite.setTint(COLOR_BLUE),
+        
+        this.ballSprite = this._ballSpriteLayer?.sprite,
+        
         this.playerSprite = this._playerSpriteLayer.sprite,
         this.shipSprite = this._shipSpriteLayer.sprite, 
         this._playerLayers = [
@@ -101,10 +117,17 @@ class PlayerClass {
             this._shipGlowLayer, 
             this._shipOverlayLayer, 
             this._shipExtraLayer
-        ], 
+        ],
+        this._ballLayers = [
+            this._ballSpriteLayer,
+            this._ballGlowLayer,
+            this._ballOverlayLayer,
+            this._ballExtraLayer
+        ],
         this._allLayers = [
             ...this._playerLayers,
-            ...this._shipLayers
+            ...this._shipLayers,
+            ...this._ballLayers
         ];
     }
     _initParticles(scene) {
@@ -305,9 +328,10 @@ class PlayerClass {
         this._particleEmitter.particleX = playerWorldX - 20,
         this._particleEmitter.particleY = playerWorldY + 26;
         
+        // ground particles for cube and ball mode
         const isOnGround = this.p.onGround && !this.p.isFlying;
 
-        // start or stop ground particles
+        // start or stop ground particles (cube and ball mode)
         isOnGround && !this._particleActive ? (
             this._particleEmitter.start(),
             this._particleActive = true
@@ -379,6 +403,12 @@ class PlayerClass {
         this._shipOverlayLayer && this._shipOverlayLayer.sprite.setVisible(visible),
         this._shipExtraLayer && this._shipExtraLayer.sprite.setVisible(visible);
     }
+    setBallVisible(visible) {
+        this._ballSpriteLayer && this._ballSpriteLayer.sprite.setVisible(visible),
+        this._ballGlowLayer && this._ballGlowLayer.sprite.setVisible(visible && this._ballGlowLayer.sprite._glowEnabled),
+        this._ballOverlayLayer && this._ballOverlayLayer.sprite.setVisible(visible),
+        this._ballExtraLayer && this._ballExtraLayer.sprite.setVisible(visible);
+    }
     // updates the player position and other visual elements
     syncSprites(cameraX, cameraY, deltaTime, playerScreenX) {
         if (this._endAnimating) return;
@@ -412,6 +442,13 @@ class PlayerClass {
                 layer && (
                     layer.sprite.x = screenX + OFFC,
                     layer.sprite.y = screenY + OFFD,
+                    layer.sprite.rotation = rotation
+                );
+        } else if (this.p.isBall) {
+            for (const layer of this._ballLayers)
+                layer && (
+                    layer.sprite.x = screenX,
+                    layer.sprite.y = screenY,
                     layer.sprite.rotation = rotation
                 );
         } else {
@@ -488,6 +525,75 @@ class PlayerClass {
                 layer && layer.sprite.setScale(1);
                 
             this._gameLayer.setFlyMode(false, 0);
+        }
+    }
+    // enters ball gamemode
+    enterBallMode(portal = null) {
+        if (this.p.isBall) return;
+        this.p.isBall = true,
+        this.p.isFlying = false,
+
+        this.p.yVelocity *= 0.5,
+        this.p.onGround = false,
+        this.p.canJump = false,
+        this.p.isJumping = false,
+
+        this.stopRotation(),
+        
+        this._rotation = 0,
+        this._particleEmitter.stop(),
+        this._particleActive = false,
+        this._flyParticleEmitter.stop(),
+        this._flyParticleActive = false,
+        this._flyParticle2Emitter.stop(),
+        this._flyParticle2Active = false,
+        this._shipDragEmitter.stop(),
+        this._shipDragActive = false,
+        
+        this._streak.stop(),
+        this._streak.reset(),
+        this.setBallVisible(true);
+        
+        for (const layer of this._playerLayers)
+            layer && layer.sprite.setScale(0.55);
+        for (const layer of this._shipLayers)
+            layer && layer.sprite.setScale(0.55);
+
+        let playerY = this.p.y;
+        portal && (
+            playerY = undefined !== portal.portalY ?
+                portal.portalY : portal.y
+            ),
+
+        this._gameLayer.setBallMode(true, playerY);
+    }
+    // exits ball gamemode
+    exitBallMode() {
+        if (this.p.isBall) {
+            this.p.isBall = false,
+
+            this.p.yVelocity *= 0.5,
+            this.p.onGround = false,
+            this.p.canJump = false,
+            this.p.isJumping = false,
+            
+            this.stopRotation(),
+            
+            this._rotation = 0,
+            this._particleEmitter.stop(),
+            this._particleActive = false,
+            
+            this._streak.stop(),
+            this._streak.reset(),
+            this.setBallVisible(false),
+            this.setCubeVisible(true);
+            
+            for (const layer of this._playerLayers)
+                layer && layer.sprite.setScale(1);
+            for (const layer of this._shipLayers)
+                layer && layer.sprite.setScale(1);
+                
+            this._gameLayer.setBallMode(false, 0);
         }
     }
     hitGround() {
@@ -616,7 +722,8 @@ class PlayerClass {
         
         this._createExplosionPieces(deathScreenX, deathScreenY, deathScale),
         this.setCubeVisible(false),
-        this.setShipVisible(false);
+        this.setShipVisible(false),
+        this.setBallVisible(false);
     }
     // creates the pieces for the player explosion effect that collide with the ground
     _createExplosionPieces(centerX, centerY, scale) {
@@ -638,10 +745,14 @@ class PlayerClass {
                 this._playerOverlayLayer,
                 this._shipGlowLayer,
                 this._shipOverlayLayer,
+                this._ballGlowLayer,
+                this._ballOverlayLayer,
                 this._playerSpriteLayer,
                 this._playerExtraLayer,
                 this._shipSpriteLayer,
-                this._shipExtraLayer
+                this._shipExtraLayer,
+                this._ballSpriteLayer,
+                this._ballExtraLayer
             ];
 
         for (const layer of layerOrder) {
@@ -1000,7 +1111,47 @@ class PlayerClass {
     updateJump(deltaTime) {
         if (this.p.isFlying)
             this._updateFlyJump(deltaTime);
-        else {
+        else if (this.p.isBall) {
+            // Ball mode physics - gravity flip on jump
+            if (this.p.upKeyDown && this.p.canJump) {
+                this.p.gravityFlipped = !this.p.gravityFlipped;
+                this.p.yVelocity = 22.360064 * this.flipMod();
+                this.p.isJumping = true;
+                this.p.onGround = false;
+                this.p.canJump = false;
+                this.p.upKeyPressed = false;
+                this.runRotateAction();
+            } else {
+                if (this.p.isJumping) {
+                    this.p.yVelocity -= JUMP_VELOCITY * deltaTime * this.flipMod();
+                    this.playerIsFalling() && (
+                        this.p.isJumping = false,
+                        this.p.onGround = false
+                    );
+                } else {
+                    // falling
+                    if (this.playerIsFalling() && (this.p.canJump = false),
+                    this.p.yVelocity -= JUMP_VELOCITY * deltaTime * this.flipMod(),
+                    
+                    this.p.gravityFlipped
+                        ? this.p.yVelocity = Math.min(this.p.yVelocity, 30)
+                        : this.p.yVelocity = Math.max(this.p.yVelocity, -30),
+                        
+                    this._isFallingPastThreshold() && !this.rotateActionActive &&
+                        this.runRotateAction(),
+                        
+                    // if
+                    this.playerIsFalling()) {
+                        let isFallingFast;
+                        isFallingFast = this.p.gravityFlipped
+                            ? this.p.yVelocity > 4
+                            : this.p.yVelocity < -4,
+                            
+                        isFallingFast && (this.p.onGround = false);
+                    }
+                }
+            }
+        } else {
             if (this.p.upKeyDown && this.p.canJump) // jump
                 this.p.isJumping = true,
                 this.p.onGround = false,
@@ -1076,7 +1227,7 @@ class PlayerClass {
             worldX = cameraX + PLAYER_GAME_CAMERA_X,
             playerY = this.p.y,
             lastPlayerY = this.p.lastY,
-            innerMargin = this.p.isFlying ? 12 : 20;
+            innerMargin = (this.p.isFlying || this.p.isBall) ? 12 : 20;
         
         this.p.collideTop = 0,
         this.p.collideBottom = 0,
@@ -1093,7 +1244,13 @@ class PlayerClass {
 
             if (!(worldX + 30 <= objectLeft || worldX - 30 >= objectRight || playerY + halfSize <= objectBottom || playerY - halfSize >= objectTop)) {
                 
-                if (object.type !== OBJECT_TYPE_PORTAL_SHIP) { // ship portal
+                if (object.type === OBJECT_TYPE_PORTAL_BALL) { // ball portal
+                    object.activated || (
+                        object.activated = true,
+                        this._playPortalShine(object),
+                        this.enterBallMode(object)
+                    );
+                } else if (object.type !== OBJECT_TYPE_PORTAL_SHIP) { // ship portal
 
                     if (object.type !== OBJECT_TYPE_PORTAL_CUBE) { // cube portal
 
@@ -1126,7 +1283,7 @@ class PlayerClass {
                                     this.hitGround(), 
                                     landedOnObject = true, 
                                     this.p.collideBottom = objectTop, 
-                                    this.p.isFlying || this._checkSnapJump(object);
+                                    (this.p.isFlying || this.p.isBall) || this._checkSnapJump(object);
                                     continue;
                                 }
                                 if ((bottomEdge <= objectBottom || lastBottomEdge <= objectBottom) && (this.p.yVelocity >= 0 || this.p.onGround) && this.p.isFlying) {
@@ -1144,7 +1301,7 @@ class PlayerClass {
                         object.activated || (
                             object.activated = true,
                             this._playPortalShine(object),
-                            this.exitShipMode()
+                            this.p.isBall ? this.exitBallMode() : this.exitShipMode()
                         );
                 } else
                     // ship portal
@@ -1213,7 +1370,7 @@ class PlayerClass {
             halfSize2 = 30, // maybe y?
             offsettedCameraX = cameraX + PLAYER_GAME_CAMERA_X, // this is where the player stays on screen
             playerY = this.p.y,
-            innerMargin = this.p.isFlying ? 12 : 20,
+            innerMargin = (this.p.isFlying || this.p.isBall) ? 12 : 20,
             nearbyObjects = this._gameLayer.getNearbySectionObjects(offsettedCameraX);
         
         // draw hitboxes
@@ -1271,7 +1428,11 @@ class PlayerClass {
                 this._shipSpriteLayer,
                 this._shipGlowLayer,
                 this._shipOverlayLayer,
-                this._shipExtraLayer
+                this._shipExtraLayer,
+                this._ballSpriteLayer,
+                this._ballGlowLayer,
+                this._ballOverlayLayer,
+                this._ballExtraLayer
             ].filter(layer => layer && layer.sprite.visible).map(layer => layer.sprite);
             
         this._particleEmitter.stop(),
@@ -1280,14 +1441,19 @@ class PlayerClass {
         this._shipDragEmitter.stop();
 
         const isFlying = this.p.isFlying,
+            isBall = this.p.isBall,
             shipLayers = [this._shipSpriteLayer, this._shipGlowLayer, this._shipOverlayLayer, this._shipExtraLayer],
             playerLayers = [this._playerSpriteLayer, this._playerGlowLayer, this._playerOverlayLayer, this._playerExtraLayer],
+            ballLayers = [this._ballSpriteLayer, this._ballGlowLayer, this._ballOverlayLayer, this._ballExtraLayer],
             spritePieces = visibleSprites.map(sprite => {
                 let localY = 0;
                 if (isFlying) {
                     const filteredShipLayers = shipLayers.some(layer => layer && layer.sprite === sprite),
-                        playerLayers = playerLayers.some(layer => layer && layer.sprite === sprite);
-                    filteredShipLayers ? localY = 10 : playerLayers && (localY = -10);
+                        filteredPlayerLayers = playerLayers.some(layer => layer && layer.sprite === sprite);
+                    filteredShipLayers ? localY = 10 : filteredPlayerLayers && (localY = -10);
+                } else if (isBall) {
+                    const filteredBallLayers = ballLayers.some(layer => layer && layer.sprite === sprite);
+                    filteredBallLayers && (localY = 0);
                 }
                 return {
                     spr: sprite,
@@ -1345,7 +1511,7 @@ class PlayerClass {
             ease: time => Math.pow(time, 1.5)
         });
     }
-    reset() {
+reset() {
         this._cleanupExplosion(),
         this._endAnimating = false,
         this._lastLandObject = null,
@@ -1356,10 +1522,13 @@ class PlayerClass {
         this._lastCameraX = 0,
         this._lastCameraY = 0,
         this.setCubeVisible(true),
-        this.setShipVisible(false);
+        this.setShipVisible(false),
+        this.setBallVisible(false);
         for (const layer of this._allLayers)
             layer && layer.sprite.setAlpha(1);
         for (const layer of this._playerLayers)
+            layer && layer.sprite.setScale(1);
+        for (const layer of this._shipLayers)
             layer && layer.sprite.setScale(1);
         this._particleEmitter.stop(),
         this._particleActive = false,

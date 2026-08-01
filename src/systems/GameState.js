@@ -17,6 +17,7 @@ class GameState {
         this.isJumping = false, 
         this.gravityFlipped = false, 
         this.isFlying = false, 
+        this.isBall = false,
         this.wasBoosted = false, 
         
         this.collideTop = 0, 

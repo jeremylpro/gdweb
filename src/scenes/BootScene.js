@@ -38,6 +38,7 @@ class BootScene extends Phaser.Scene {
         // atlas from original game
         this.load.atlas("GJ_GameSheet-hd", 'assets/GJ_GameSheet-hd.png', 'assets/GJ_GameSheet-hd.json'),
         this.load.atlas("GJ_GameSheet02-hd", 'assets/GJ_GameSheet02-hd.png', 'assets/GJ_GameSheet02-hd.json'),
+        this.load.atlas("GJ_GameSheetIcons-hd", 'assets/GJ_GameSheetIcons-hd.png', 'assets/GJ_GameSheetIcons-hd.json'),
         // fonts
         this.load.image('bigFont', 'assets/bigFont.png'),
         this.load.text("bigFontFnt", "assets/bigFont.fnt"),

@@ -276,6 +276,13 @@ class LevelClass {
             this._groundAnimating = true;
         
     }
+    setBallMode(active, portalY) {
+        // Ball mode uses standard cube camera, no special bounds needed
+        // Could add visual effects here in the future
+        if (!active) {
+            // Reset any ball-specific state if needed
+        }
+    }
     stepGroundAnimation(deltaTime) {
         if (!this._groundAnimating) return;
         this._groundAnimTime += deltaTime;

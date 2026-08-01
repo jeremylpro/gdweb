@@ -816,7 +816,7 @@ class GameScene extends Phaser.Scene {
         this._slideIn || this._state.isDead || (
             this._state.upKeyDown = true,
             this._state.upKeyPressed = true,
-            !this._state.isFlying && this._state.canJump && (
+            (!this._state.isFlying || this._state.isBall) && this._state.canJump && (
                 this._player.updateJump(0),
                 this._totalJumps++
             ));
@@ -1102,7 +1102,7 @@ class GameScene extends Phaser.Scene {
                 this._state.upKeyDown = true
             ),
             
-            this._level.updateEndPortalY(this._cameraY, this._state.isFlying),
+            this._level.updateEndPortalY(this._cameraY, this._state.isFlying || this._state.isBall),
         // if
             !this._levelWon && !this._state.isDead && this._level.endXPos > 0) {
             // distance till you essentially win    
@@ -1185,7 +1185,7 @@ class GameScene extends Phaser.Scene {
             this._state.y += this._state.yVelocity * subDeltaScaled,
             this._player.checkCollisions(this._playerWorldX - PLAYER_GAME_CAMERA_X),
             this._playerWorldX += subDelta * PLAYER_SPEED * TIME_SCALE,
-            this._state.isFlying || (
+            this._state.isFlying || this._state.isBall || (
                 this._state.onGround
                 ? this._player.updateGroundRotation(subDeltaScaled)
                 : this._player.rotateActionActive &&

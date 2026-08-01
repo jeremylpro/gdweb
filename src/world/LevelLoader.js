@@ -2,7 +2,7 @@
     handles parsing level data, also contains definitions and helpers
 */
 import pako from 'pako';
-import { TILE_SIZE2, COLOR_GREEN, OBJECT_TYPE_SOLID, OBJECT_TYPE_HAZARD, OBJECT_TYPE_PORTAL_SHIP, OBJECT_TYPE2_SOLID, OBJECT_TYPE2_HAZARD, OBJECT_TYPE2_DECORATIVE, OBJECT_TYPE2_PORTAL, OBJECT_TYPE2_PAD, OBJECT_TYPE2_RING, OBJECT_TYPE2_TRIGGER, OBJECT_TYPE2_SPEED, OBJECT_TYPE2_FLY, OBJECT_TYPE2_CUBE } from '../constants.js';
+import { TILE_SIZE2, COLOR_GREEN, OBJECT_TYPE_SOLID, OBJECT_TYPE_HAZARD, OBJECT_TYPE_PORTAL_SHIP, OBJECT_TYPE_PORTAL_CUBE, OBJECT_TYPE_PORTAL_BALL, OBJECT_TYPE2_SOLID, OBJECT_TYPE2_HAZARD, OBJECT_TYPE2_DECORATIVE, OBJECT_TYPE2_PORTAL, OBJECT_TYPE2_PAD, OBJECT_TYPE2_RING, OBJECT_TYPE2_TRIGGER, OBJECT_TYPE2_SPEED, OBJECT_TYPE2_FLY, OBJECT_TYPE2_CUBE, OBJECT_TYPE2_BALL } from '../constants.js';
 
 // parses a single object (comma separated key value pairs) into an object with the relevant properties, returns null if the object is invalid and should be skipped
 function parseObject(objectString) {
@@ -236,10 +236,12 @@ const OBJECT_DEFINITIONS = {
         },
         47: {
             type: OBJECT_TYPE2_PORTAL,
-            frame: 'portal_07_front_001.png',
+            frame: 'portal_13_front_001.png',
             gridW: 1,
             gridH: 3,
-            'sub': OBJECT_TYPE2_FLY
+            'sub': OBJECT_TYPE2_BALL,
+            'portalParticle': true,
+            'portalParticleColor': COLOR_GREEN
         },
         200: {
             type: OBJECT_TYPE2_SPEED,
